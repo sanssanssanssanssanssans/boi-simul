@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>보일의 법칙 가상 실험</title>
+<style>
+body{margin:0;padding:24px;background:#020617;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+h1{font-size:24px;margin:0 0 6px;font-weight:700}
+p{margin:4px 0 10px;font-size:13px;color:#cbd5f5}
+.wrap{max-width:1100px;margin:0 auto}
+.grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr);gap:16px}
+.box{background:#020617;border-radius:16px;padding:16px 18px;margin-bottom:14px;border:1px solid rgba(148,163,184,.35);box-shadow:0 18px 40px rgba(15,23,42,.7)}
+.box-title{font-size:14px;font-weight:600;margin-bottom:8px;color:#e5e7eb}
+label{font-size:13px;display:block;margin-bottom:4px}
+input[type=range]{width:100%}
+.value-row{display:flex;justify-content:space-between;font-size:13px;margin-top:4px}
+.value-row span.key{color:#9ca3af}
+.value-row span.val{font-weight:600}
+.slider-wrap{margin-bottom:10px}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;border-radius:999px;padding:3px 8px;background:rgba(15,23,42,.9);border:1px solid rgba(148,163,184,.4);color:#9ca3af;margin-left:4px}
+.tag-dot{width:7px;height:7px;border-radius:999px;background:radial-gradient(circle,#22c55e,#16a34a)}
+button{padding:7px 12px;font-size:12px;border-radius:999px;border:0;cursor:pointer;background:linear-gradient(135deg,#22c55e,#3b82f6);color:#f9fafb;font-weight:600;margin-top:8px;box-shadow:0 10px 20px rgba(37,99,235,.5);transition:transform .1s,box-shadow .1s,filter .1s}
+button:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 14px 30px rgba(37,99,235,.7)}
+button:active{transform:translateY(0);box-shadow:0 8px 18px rgba(37,99,235,.4)}
+.small{font-size:11px;color:#9ca3af}
+.gas-area{display:flex;justify-content:center;align-items:center;padding:8px 0 0}
+.cylinder{width:200px;height:260px;border-radius:18px;border:2px solid rgba(148,163,184,.6);position:relative;background:radial-gradient(circle at top,#0f172a,#020617);overflow:hidden;box-shadow:0 18px 40px rgba(15,23,42,.8)}
+.piston{position:absolute;left:10px;right:10px;height:14px;border-radius:10px;background:linear-gradient(90deg,#e5e7eb,#9ca3af);box-shadow:0 4px 8px rgba(15,23,42,.8)}
+.piston-handle{position:absolute;top:50%;right:-20px;width:12px;height:40px;margin-top:-20px;border-radius:999px;background:linear-gradient(180deg,#e5e7eb,#9ca3af)}
+.gas{position:absolute;left:12px;right:12px;border-radius:14px 14px 4px 4px;background:radial-gradient(circle at 30% 0,#38bdf8,#0ea5e9);opacity:.9;display:flex;justify-content:center;align-items:flex-start;padding-top:6px;color:#e0f2fe;font-size:11px}
+.gas::after{content:"";position:absolute;inset:0;background-image:radial-gradient(circle at 10% 20%,rgba(248,250,252,.8) 0,transparent 45%),radial-gradient(circle at 70% 30%,rgba(248,250,252,.4) 0,transparent 50%),radial-gradient(circle at 40% 80%,rgba(248,250,252,.4) 0,transparent 55%);opacity:.25}
+.axis-label{font-size:11px;color:#9ca3af}
+.canvas-wrap{margin-top:6px;border-radius:12px;background:radial-gradient(circle at top,#020617,#020617 70%);border:1px solid rgba(148,163,184,.35);padding:8px;box-shadow:0 10px 24px rgba(15,23,42,.9)}
+table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+th,td{border-bottom:1px solid rgba(55,65,81,.7);padding:4px 6px;text-align:center}
+th{color:#cbd5f5;font-weight:500;background:rgba(15,23,42,.7)}
+tr:last-child td{border-bottom:none}
+.badge-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;font-size:11px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:999px;border:1px solid rgba(148,163,184,.5);background:rgba(15,23,42,.9);color:#9ca3af}
+.badge-dot{width:7px;height:7px;border-radius:999px}
+.badge-dot-theory{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.badge-dot-exp{background:linear-gradient(90deg,#f97316,#fb923c)}
+.highlight{animation:hl .8s ease-out}
+@keyframes hl{0%{box-shadow:0 0 0 0 rgba(56,189,248,.9)}100%{box-shadow:0 0 0 16px rgba(56,189,248,0)}}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>보일의 법칙 가상 실험실</h1>
+<p>온도와 기체의 몰수가 일정할 때, 압력과 부피의 관계 <strong>P · V = 일정</strong>을 직접 확인해 보세요.</p>
+
+<div class="grid">
+  <div>
+    <div class="box">
+      <div class="box-title">실험 조건 설정<span class="tag"><span class="tag-dot"></span>T, n 일정 (등온 과정)</span></div>
+      <div class="slider-wrap">
+        <label for="volumeRange">부피 V (L)</label>
+        <input id="volumeRange" type="range" min="0.5" max="5" step="0.1" value="2">
+        <div class="value-row">
+          <span class="key">현재 부피 V</span>
+          <span class="val"><span id="vVal">2.0</span> L</span>
+        </div>
+      </div>
+      <div class="slider-wrap">
+        <label for="nInput">기체 몰수 n (mol)</label>
+        <input id="nInput" type="range" min="0.5" max="3" step="0.1" value="1">
+        <div class="value-row">
+          <span class="key">현재 몰수 n</span>
+          <span class="val"><span id="nVal">1.0</span> mol</span>
+        </div>
+      </div>
+      <div class="slider-wrap">
+        <label for="tInput">온도 T (K)</label>
+        <input id="tInput" type="range" min="250" max="350" step="5" value="300">
+        <div class="value-row">
+          <span class="key">현재 온도 T</span>
+          <span class="val"><span id="tVal">300</span> K</span>
+        </div>
+      </div>
+      <div class="value-row">
+        <span class="key">압력 P (이론값)</span>
+        <span class="val"><span id="pVal">?</span> atm (기준 단위)</span>
+      </div>
+      <div class="value-row">
+        <span class="key">P · V (이론)</span>
+        <span class="val"><span id="pvVal">?</span> (거의 일정해야 함)</span>
+      </div>
+      <div class="badge-row">
+        <div class="badge"><span class="badge-dot badge-dot-theory"></span>이론 곡선 P = k / V</div>
+        <div class="badge"><span class="badge-dot badge-dot-exp"></span>측정 데이터 (실험값)</div>
+      </div>
+      <button id="addPoint">현재 상태를 실험 데이터로 기록</button>
+      <div class="small">※ 여러 점을 찍은 뒤, 그래프에서 이론 곡선과 얼마나 잘 맞는지 비교해 보세요.</div>
+    </div>
+
+    <div class="box">
+      <div class="box-title">기체 실린더 시각화</div>
+      <div class="gas-area">
+        <div class="cylinder" id="cylinder">
+          <div class="piston" id="piston">
+            <div class="piston-handle"></div>
+          </div>
+          <div class="gas" id="gasLayer">
+            <div>기체 입자</div>
+          </div>
+        </div>
+      </div>
+      <div class="small">부피를 줄이면 피스톤이 내려오고, 같은 양의 기체가 더 좁은 공간에 몰리면서 압력이 커집니다.</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="box">
+      <div class="box-title">P–V 그래프</div>
+      <div class="axis-label">세로축: 압력 P (atm, 상대값) / 가로축: 부피 V (L)</div>
+      <div class="canvas-wrap">
+        <canvas id="pvCanvas" width="420" height="260"></canvas>
+      </div>
+      <div class="small">초기 상태에서 이론 곡선이 그려지며, 기록 버튼으로 찍은 실험 데이터가 주황색 점으로 표시됩니다.</div>
+    </div>
+
+    <div class="box">
+      <div class="box-title">실험 데이터 표</div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>V (L)</th>
+            <th>P (atm)</th>
+            <th>P · V</th>
+          </tr>
+        </thead>
+        <tbody id="dataBody"></tbody>
+      </table>
+      <button id="resetData">데이터 초기화</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const R=0.082;
+const volRange=document.getElementById("volumeRange");
+const nInput=document.getElementById("nInput");
+const tInput=document.getElementById("tInput");
+const vVal=document.getElementById("vVal");
+const nVal=document.getElementById("nVal");
+const tVal=document.getElementById("tVal");
+const pVal=document.getElementById("pVal");
+const pvVal=document.getElementById("pvVal");
+const piston=document.getElementById("piston");
+const gasLayer=document.getElementById("gasLayer");
+const addPointBtn=document.getElementById("addPoint");
+const resetDataBtn=document.getElementById("resetData");
+const dataBody=document.getElementById("dataBody");
+const canvas=document.getElementById("pvCanvas");
+const ctx=canvas.getContext("2d");
+let dataPoints=[];
+let kConst=null;
+
+function computeState(){
+  const V=parseFloat(volRange.value);
+  const n=parseFloat(nInput.value);
+  const T=parseFloat(tInput.value);
+  const P=(n*R*T)/V;
+  vVal.textContent=V.toFixed(1);
+  nVal.textContent=n.toFixed(1);
+  tVal.textContent=T.toFixed(0);
+  pVal.textContent=P.toFixed(2);
+  const PV=P*V;
+  pvVal.textContent=PV.toFixed(2);
+  if(kConst===null) kConst=PV;
+  updateCylinder(V,P,n,T);
+  drawPV();
+}
+
+function updateCylinder(V,P,n,T){
+  const cylHeight=260;
+  const minV=0.5,maxV=5;
+  const t=1-(V-minV)/(maxV-minV);
+  const pistonTop=20+t*(cylHeight-80);
+  piston.style.top=pistonTop+"px";
+  const gasTop=pistonTop+14;
+  const gasBottom=cylHeight-14;
+  const gasHeight=Math.max(30,gasBottom-gasTop);
+  gasLayer.style.top=gasTop+"px";
+  gasLayer.style.height=gasHeight+"px";
+  const densityFactor=(n*T)/(V*300);
+  const opacity=Math.min(1,0.3+0.3*densityFactor);
+  gasLayer.style.opacity=opacity.toFixed(2);
+}
+
+function drawPV(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const padding=30;
+  const w=canvas.width-padding*2;
+  const h=canvas.height-padding*2;
+  ctx.save();
+  ctx.translate(padding,canvas.height-padding);
+  ctx.scale(1,-1);
+  ctx.strokeStyle="rgba(148,163,184,0.8)";
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.lineTo(w,0);
+  ctx.moveTo(0,0);
+  ctx.lineTo(0,h);
+  ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle="rgba(148,163,184,0.9)";
+  ctx.font="10px system-ui";
+  ctx.fillText("V (L)",canvas.width/2,canvas.height-4);
+  ctx.save();
+  ctx.translate(10,canvas.height/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText("P (atm, 상대값)",0,0);
+  ctx.restore();
+  if(kConst===null) return;
+  const minV=0.5,maxV=5;
+  let maxP=0;
+  for(let V=minV;V<=maxV;V+=0.1){
+    const P=kConst/V;
+    if(P>maxP) maxP=P;
+  }
+  const scaleX=v=>((v-minV)/(maxV-minV))*w+padding;
+  const scaleY=p=>canvas.height-padding-(p/maxP)*h;
+  ctx.strokeStyle="rgba(34,197,94,0.9)";
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  let first=true;
+  for(let V=minV;V<=maxV;V+=0.03){
+    const P=kConst/V;
+    const x=scaleX(V);
+    const y=scaleY(P);
+    if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  ctx.fillStyle="rgba(249,115,22,0.95)";
+  dataPoints.forEach(p=>{
+    const x=scaleX(p.V);
+    const y=scaleY(p.P);
+    ctx.beginPath();
+    ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fill();
+  });
+}
+
+function addDataPoint(){
+  const V=parseFloat(volRange.value);
+  const n=parseFloat(nInput.value);
+  const T=parseFloat(tInput.value);
+  const P=(n*R*T)/V;
+  const PV=P*V;
+  dataPoints.push({V,P,PV});
+  const row=document.createElement("tr");
+  const idx=dataPoints.length;
+  row.innerHTML="<td>"+idx+"</td><td>"+V.toFixed(2)+"</td><td>"+P.toFixed(2)+"</td><td>"+PV.toFixed(2)+"</td>";
+  dataBody.appendChild(row);
+  const box=document.querySelector(".canvas-wrap");
+  box.classList.add("highlight");
+  setTimeout(()=>box.classList.remove("highlight"),800);
+  drawPV();
+}
+
+function resetData(){
+  dataPoints=[];
+  dataBody.innerHTML="";
+  const box=document.querySelector(".canvas-wrap");
+  box.classList.add("highlight");
+  setTimeout(()=>box.classList.remove("highlight"),800);
+  drawPV();
+}
+
+volRange.addEventListener("input",computeState);
+nInput.addEventListener("input",e=>{
+  nVal.textContent=parseFloat(e.target.value).toFixed(1);
+  computeState();
+});
+tInput.addEventListener("input",e=>{
+  tVal.textContent=parseFloat(e.target.value).toFixed(0);
+  computeState();
+});
+addPointBtn.addEventListener("click",addDataPoint);
+resetDataBtn.addEventListener("click",resetData);
+window.addEventListener("resize",()=>{
+  const rect=canvas.getBoundingClientRect();
+  canvas.width=rect.width*devicePixelRatio;
+  canvas.height=260*devicePixelRatio;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  drawPV();
+});
+
+(function init(){
+  const rect=canvas.getBoundingClientRect();
+  canvas.width=rect.width*devicePixelRatio;
+  canvas.height=260*devicePixelRatio;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  computeState();
+})();
+</script>
+</body>
+</html>
